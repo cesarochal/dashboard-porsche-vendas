@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vendas Porsche: dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+:root{--bg:#F3F4F5;--ink:#16181B;--mute:#656B73;--line:#D6D9DC;--red:#D5001C;--bar:#2A2E33;--track:#E4E6E8;--panel:#FFFFFF;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121416;--ink:#ECEEF0;--mute:#9AA1A9;--line:#2C3035;--red:#FF3B4E;--bar:#C9CDD2;--track:#23272B;--panel:#1A1D20;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121416;--ink:#ECEEF0;--mute:#9AA1A9;--line:#2C3035;--red:#FF3B4E;--bar:#C9CDD2;--track:#23272B;--panel:#1A1D20;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Barlow,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 20px 40px}
+h1,h2,.num{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-weight:600;letter-spacing:.01em}
+h1{font-size:clamp(2rem,5vw,3rem);line-height:1.05;margin:0 0 6px}
+h1 span{color:var(--red)}
+.lead{color:var(--mute);margin:0 0 22px;max-width:60ch}
+.filters{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:end;padding:14px 0;border-top:3px solid var(--red);border-bottom:1px solid var(--line)}
+.filters label{display:flex;flex-direction:column;font-size:.85rem;color:var(--mute);gap:3px}
+select,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:7px 10px;min-width:9rem}
+button{cursor:pointer;min-width:0}
+button:hover{border-color:var(--red)}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.chk{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--ink)!important;padding-bottom:8px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);margin:22px 0 8px}
+.kpi{padding:0 18px;border-left:1px solid var(--line)}
+.kpi:first-child{padding-left:0;border-left:0}
+.kpi .num{display:block;font-size:clamp(2rem,6vw,3.6rem);line-height:1.05}
+.kpi small{color:var(--mute)}
+section{padding:26px 0 8px;border-top:1px solid var(--line);margin-top:20px}
+h2{font-size:1.6rem;margin:0 0 4px}
+.read{color:var(--mute);margin:0 0 16px;max-width:70ch}
+.row{display:grid;grid-template-columns:8.5rem 1fr 11rem;gap:12px;align-items:center;padding:5px 0}
+.lb{font-weight:500}
+.tr{height:14px;background:var(--track);border-radius:2px;overflow:hidden}
+.tr i{display:block;height:100%;background:var(--bar);border-radius:2px;transition:width .25s}
+.row:first-child .tr i{background:var(--red)}
+.vl{text-align:right;font-variant-numeric:tabular-nums}
+.vl small{display:block;color:var(--mute);font-size:.8rem;line-height:1.2}
+.empty{color:var(--mute);padding:14px 0}
+footer{margin-top:30px;padding-top:14px;border-top:1px solid var(--line);color:var(--mute);font-size:.85rem;max-width:80ch}
+@media (max-width:640px){.kpis{grid-template-columns:1fr;gap:14px}.kpi{padding:0;border:0}.row{grid-template-columns:6rem 1fr;}.vl{grid-column:1/-1;text-align:left;margin-top:-4px}select{min-width:7.5rem}}
+@media (prefers-reduced-motion:reduce){.tr i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Vendas Porsche<span>.</span></h1>
+<p class="lead">100 vendas por modelo, estado, ano e forma de pagamento. Use os filtros para recortar e veja as três respostas mudarem.</p>
+<div class="filters" role="group" aria-label="Filtros">
+<label>Família<select id="fF"></select></label>
+<label>Estado<select id="fS"></select></label>
+<label>Ano do modelo<select id="fY"></select></label>
+<label>Pagamento<select id="fP"></select></label>
+<label class="chk"><input type="checkbox" id="fC"> Incluir vendas canceladas</label>
+<button id="rs" type="button">Limpar filtros</button>
+</div>
+<div class="kpis" aria-live="polite">
+<div class="kpi"><span class="num" id="k1">0</span><small>vendas</small></div>
+<div class="kpi"><span class="num" id="k2">0</span><small>receita</small></div>
+<div class="kpi"><span class="num" id="k3">0</span><small>ticket médio</small></div>
+</div>
+<section><h2>Quais famílias geram mais receita?</h2><p class="read" id="r1"></p><div id="c1"></div></section>
+<section><h2>Onde estão os estados que mais faturam?</h2><p class="read" id="r2"></p><div id="c2"></div></section>
+<section><h2>Qual forma de pagamento domina, e com que ticket?</h2><p class="read" id="r3"></p><div id="c3"></div></section>
+<footer>Base: planilha sanitizada com 100 vendas. Nomes de clientes e vendedores foram removidos antes de embutir os dados. As 7 vendas canceladas ficam fora por padrão. Como 24 datas de venda são inválidas, o filtro de tempo usa o ano do modelo.</footer>
+</div>
+<script>
+const D=[{"m":"718 Cayman","f":"718","y":2022,"p":79500.0,"pay":"Credit Card","c":"Boston","s":"MA","st":"Delivered"},{"m":"911 Turbo S","f":"911","y":2024,"p":235000.0,"pay":"Wire Transfer","c":"Seattle","s":"WA","st":"Delivered"},{"m":"Cayenne Coupe","f":"Cayenne","y":2023,"p":112750.0,"pay":"Financing","c":"Austin","s":"TX","st":"In Transit"},{"m":"Macan S","f":"Macan","y":2021,"p":68900.0,"pay":"Cash","c":"Denver","s":"CO","st":"Pending"},{"m":"Taycan 4S","f":"Taycan","y":2024,"p":121000.0,"pay":"Bank Transfer","c":"Los Angeles","s":"CA","st":"Delivered"},{"m":"Panamera 4","f":"Panamera","y":2023,"p":104500.0,"pay":"Credit Card","c":"Miami","s":"FL","st":"Cancelled"},{"m":"911 Carrera S","f":"911","y":2020,"p":96300.0,"pay":"Lease","c":"New York","s":"NY","st":"Delivered"},{"m":"Cayenne E-Hybrid","f":"Cayenne","y":2022,"p":89750.0,"pay":"Wire Transfer","c":"San Diego","s":"CA","st":"Pending Approval"},{"m":"718 Boxster","f":"718","y":2021,"p":73500.0,"pay":"Debit Card","c":"Chicago","s":"IL","st":"Shipped"},{"m":"Macan GTS","f":"Macan","y":2024,"p":95000.0,"pay":"Financing","c":"Phoenix","s":"AZ","st":"In Transit"},{"m":"Taycan Turbo","f":"Taycan","y":2023,"p":153200.5,"pay":"ACH Payment","c":"Dallas","s":"TX","st":"Delivered"},{"m":"911 GT3","f":"911","y":2024,"p":241000.0,"pay":"Wire Transfer","c":"Las Vegas","s":"NV","st":"Pending"},{"m":"Panamera Turbo S","f":"Panamera","y":2022,"p":132000.0,"pay":"Cash","c":"San Jose","s":"CA","st":"Delivered"},{"m":"Cayenne Turbo GT","f":"Cayenne","y":2024,"p":188000.0,"pay":"Crypto Payment","c":"Houston","s":"TX","st":"Awaiting Delivery"},{"m":"911 Carrera Cabriolet","f":"911","y":2023,"p":127800.0,"pay":"Credit Card","c":"Atlanta","s":"GA","st":"Delivered"},{"m":"Macan","f":"Macan","y":2021,"p":58900.0,"pay":"Bank Transfer","c":"Orlando","s":"FL","st":"Pending"},{"m":"718 Spyder RS","f":"718","y":2024,"p":164000.0,"pay":"Financing","c":"Portland","s":"OR","st":"In Transit"},{"m":"Taycan Cross Turismo","f":"Taycan","y":2023,"p":118500.0,"pay":"Wire Transfer","c":"Charlotte","s":"NC","st":"Delivered"},{"m":"Cayenne S","f":"Cayenne","y":2022,"p":91300.0,"pay":"Credit Card","c":"Nashville","s":"TN","st":"Pending"},{"m":"911 Targa 4S","f":"911","y":2024,"p":158750.0,"pay":"Lease","c":"Minneapolis","s":"MN","st":"Delivered"},{"m":"Panamera","f":"Panamera","y":2020,"p":72000.0,"pay":"Bank Transfer","c":"Philadelphia","s":"PA","st":"Cancelled"},{"m":"Macan Electric","f":"Macan","y":2025,"p":86500.0,"pay":"Wire Transfer","c":"San Antonio","s":"TX","st":"Delivered"},{"m":"911 Dakar","f":"911","y":2024,"p":270000.0,"pay":"Cash","c":"Salt Lake City","s":"UT","st":"Awaiting Pickup"},{"m":"Taycan GTS","f":"Taycan","y":2023,"p":139000.0,"pay":"Financing","c":"Raleigh","s":"NC","st":"In Transit"},{"m":"Cayenne","f":"Cayenne","y":2021,"p":76800.0,"pay":"Credit Card","c":"Detroit","s":"MI","st":"Delivered"},{"m":"718 Cayman GT4 RS","f":"718","y":2024,"p":173600.0,"pay":"Wire Transfer","c":"Columbus","s":"OH","st":"Pending"},{"m":"911 Carrera GTS","f":"911","y":2022,"p":119900.0,"pay":"Cash","c":"Indianapolis","s":"IN","st":"Delivered"},{"m":"Panamera 4 E-Hybrid","f":"Panamera","y":2023,"p":109250.0,"pay":"Lease","c":"Fort Worth","s":"TX","st":"In Transit"},{"m":"Macan T","f":"Macan","y":2022,"p":82000.0,"pay":"Wire Transfer","c":"Jacksonville","s":"FL","st":"Delivered"},{"m":"Taycan Turbo S","f":"Taycan","y":2025,"p":214000.0,"pay":"Crypto Payment","c":"San Diego","s":"CA","st":"Pending Review"},{"m":"911 Carrera","f":"911","y":2024,"p":124500.0,"pay":"Credit Card","c":"Tampa","s":"FL","st":"Delivered"},{"m":"Cayenne S","f":"Cayenne","y":2023,"p":98200.0,"pay":"Bank Transfer","c":"Sacramento","s":"CA","st":"Pending"},{"m":"Macan","f":"Macan","y":2022,"p":67500.0,"pay":"Financing","c":"Cleveland","s":"OH","st":"Delivered"},{"m":"Taycan","f":"Taycan","y":2025,"p":116900.0,"pay":"Wire Transfer","c":"Milwaukee","s":"WI","st":"In Transit"},{"m":"Panamera 4S","f":"Panamera","y":2024,"p":112000.0,"pay":"Cash","c":"Kansas City","s":"MO","st":"Delivered"},{"m":"718 Boxster","f":"718","y":2021,"p":74000.0,"pay":"Debit Card","c":"Omaha","s":"NE","st":"Cancelled"},{"m":"911 Turbo","f":"911","y":2024,"p":198300.0,"pay":"Wire Transfer","c":"Albuquerque","s":"NM","st":"Awaiting Delivery"},{"m":"Cayenne Coupe","f":"Cayenne","y":2023,"p":103750.0,"pay":"Wire Transfer","c":"Tucson","s":"AZ","st":"Pending Approval"},{"m":"Macan GTS","f":"Macan","y":2024,"p":93600.0,"pay":"Financing","c":"Fresno","s":"CA","st":"Shipped"},{"m":"Taycan 4S","f":"Taycan","y":2025,"p":129000.0,"pay":"ACH Payment","c":"Virginia Beach","s":"VA","st":"In Transit"},{"m":"Panamera Turbo","f":"Panamera","y":2022,"p":136000.0,"pay":"Credit Card","c":"Colorado Springs","s":"CO","st":"Delivered"},{"m":"911 GT3 RS","f":"911","y":2024,"p":286500.0,"pay":"Wire Transfer","c":"Arlington","s":"TX","st":"Pending"},{"m":"Cayenne E-Hybrid","f":"Cayenne","y":2023,"p":92800.0,"pay":"Lease","c":"Bakersfield","s":"CA","st":"Delivered"},{"m":"Macan T","f":"Macan","y":2022,"p":72400.0,"pay":"Cash","c":"Mesa","s":"AZ","st":"Awaiting Pickup"},{"m":"Taycan Turbo","f":"Taycan","y":2025,"p":158500.0,"pay":"Crypto Payment","c":"Atlanta","s":"GA","st":"Delivered"},{"m":"718 Cayman","f":"718","y":2021,"p":69900.0,"pay":"Bank Transfer","c":"Long Beach","s":"CA","st":"Pending"},{"m":"911 Targa 4","f":"911","y":2024,"p":141250.0,"pay":"Financing","c":"Oakland","s":"CA","st":"In Transit"},{"m":"Panamera","f":"Panamera","y":2020,"p":71500.0,"pay":"Wire Transfer","c":"Tulsa","s":"OK","st":"Delivered"},{"m":"Cayenne Turbo","f":"Cayenne","y":2023,"p":146800.0,"pay":"Credit Card","c":"Wichita","s":"KS","st":"Pending"},{"m":"Macan Electric","f":"Macan","y":2025,"p":89700.0,"pay":"Lease","c":"New Orleans","s":"LA","st":"Delivered"},{"m":"911 Carrera S","f":"911","y":2022,"p":104600.0,"pay":"Bank Transfer","c":"Honolulu","s":"HI","st":"Cancelled"},{"m":"Taycan GTS","f":"Taycan","y":2024,"p":142000.0,"pay":"Wire Transfer","c":"Anaheim","s":"CA","st":"Delivered"},{"m":"Cayenne","f":"Cayenne","y":2021,"p":78400.0,"pay":"Cash","c":"Henderson","s":"NV","st":"Awaiting Review"},{"m":"718 Spyder RS","f":"718","y":2025,"p":169000.0,"pay":"Financing","c":"Lexington","s":"KY","st":"In Transit"},{"m":"911 Dakar","f":"911","y":2024,"p":268900.0,"pay":"Credit Card","c":"Riverside","s":"CA","st":"Delivered"},{"m":"Panamera 4","f":"Panamera","y":2023,"p":101300.0,"pay":"Wire Transfer","c":"Corpus Christi","s":"TX","st":"Pending"},{"m":"Macan S","f":"Macan","y":2021,"p":66750.0,"pay":"Cash","c":"St. Louis","s":"MO","st":"Delivered"},{"m":"Taycan Cross Turismo","f":"Taycan","y":2024,"p":127900.0,"pay":"Lease","c":"Pittsburgh","s":"PA","st":"In Transit"},{"m":"Cayenne Turbo GT","f":"Cayenne","y":2025,"p":200000.0,"pay":"Wire Transfer","c":"Cincinnati","s":"OH","st":"Delivered"},{"m":"911 Carrera Cabriolet","f":"911","y":2023,"p":132000.0,"pay":"Crypto Payment","c":"Anchorage","s":"AK","st":"Pending Review"},{"m":"718 Cayman GT4 RS","f":"718","y":2024,"p":176400.0,"pay":"Credit Card","c":"Plano","s":"TX","st":"Delivered"},{"m":"Panamera 4 E-Hybrid","f":"Panamera","y":2022,"p":108500.0,"pay":"Bank Transfer","c":"Newark","s":"NJ","st":"Cancelled"},{"m":"Macan","f":"Macan","y":2021,"p":59000.0,"pay":"Financing","c":"Greensboro","s":"NC","st":"Awaiting Delivery"},{"m":"Taycan Turbo S","f":"Taycan","y":2025,"p":218000.0,"pay":"Wire Transfer","c":"Lincoln","s":"NE","st":"Pending"},{"m":"Cayenne S","f":"Cayenne","y":2024,"p":99950.0,"pay":"Debit Card","c":"Jersey City","s":"NJ","st":"Delivered"},{"m":"911 Carrera GTS","f":"911","y":2024,"p":121750.0,"pay":"Credit Card","c":"Chandler","s":"AZ","st":"Delivered"},{"m":"718 Boxster GTS","f":"718","y":2023,"p":91500.0,"pay":"Lease","c":"Reno","s":"NV","st":"Shipped"},{"m":"Panamera Turbo S","f":"Panamera","y":2022,"p":134000.0,"pay":"Wire Transfer","c":"Buffalo","s":"NY","st":"In Transit"},{"m":"Macan GTS","f":"Macan","y":2024,"p":96800.0,"pay":"ACH Payment","c":"Durham","s":"NC","st":"Delivered"},{"m":"Taycan 4S","f":"Taycan","y":2025,"p":131600.0,"pay":"Wire Transfer","c":"Laredo","s":"TX","st":"Pending Approval"},{"m":"Cayenne E-Hybrid","f":"Cayenne","y":2023,"p":94300.0,"pay":"Cash","c":"Madison","s":"WI","st":"Delivered"},{"m":"911 Turbo S","f":"911","y":2025,"p":242000.0,"pay":"Crypto Payment","c":"Lubbock","s":"TX","st":"Awaiting Pickup"},{"m":"718 Cayman S","f":"718","y":2022,"p":82750.0,"pay":"Credit Card","c":"Toledo","s":"OH","st":"Cancelled"},{"m":"Macan Electric","f":"Macan","y":2026,"p":91300.0,"pay":"Wire Transfer","c":"Irvine","s":"CA","st":"Delivered"},{"m":"Panamera","f":"Panamera","y":2021,"p":79900.0,"pay":"Financing","c":"Garland","s":"TX","st":"Pending"},{"m":"Cayenne Coupe","f":"Cayenne","y":2024,"p":111000.0,"pay":"Bank Transfer","c":"Irving","s":"TX","st":"In Transit"},{"m":"911 Targa 4S","f":"911","y":2023,"p":156500.0,"pay":"Cash","c":"Chesapeake","s":"VA","st":"Delivered"},{"m":"Taycan","f":"Taycan","y":2025,"p":119900.0,"pay":"Lease","c":"Scottsdale","s":"AZ","st":"Pending"},{"m":"Macan T","f":"Macan","y":2022,"p":73200.0,"pay":"Wire Transfer","c":"Norfolk","s":"VA","st":"Delivered"},{"m":"911 GT3","f":"911","y":2024,"p":224000.0,"pay":"Wire Transfer","c":"Boise","s":"ID","st":"Awaiting Delivery"},{"m":"911 Carrera","f":"911","y":2024,"p":126900.0,"pay":"Credit Card","c":"Orlando","s":"FL","st":"Delivered"},{"m":"Cayenne","f":"Cayenne","y":2023,"p":84500.0,"pay":"Bank Transfer","c":"San Jose","s":"CA","st":"Pending"},{"m":"Macan S","f":"Macan","y":2022,"p":69800.0,"pay":"Financing","c":"Tampa","s":"FL","st":"Delivered"},{"m":"Taycan 4S","f":"Taycan","y":2025,"p":132700.0,"pay":"Wire Transfer","c":"Denver","s":"CO","st":"In Transit"},{"m":"Panamera","f":"Panamera","y":2021,"p":81000.0,"pay":"Cash","c":"Austin","s":"TX","st":"Delivered"},{"m":"718 Cayman","f":"718","y":2023,"p":78900.0,"pay":"Debit Card","c":"Seattle","s":"WA","st":"Cancelled"},{"m":"911 Turbo S","f":"911","y":2026,"p":249300.0,"pay":"Wire Transfer","c":"Boston","s":"MA","st":"Awaiting Delivery"},{"m":"Cayenne Coupe","f":"Cayenne","y":2024,"p":108750.0,"pay":"Wire Transfer","c":"Phoenix","s":"AZ","st":"Pending Approval"},{"m":"Macan Electric","f":"Macan","y":2026,"p":92600.0,"pay":"Financing","c":"Chicago","s":"IL","st":"Shipped"},{"m":"Taycan Turbo","f":"Taycan","y":2025,"p":164000.0,"pay":"ACH Payment","c":"Dallas","s":"TX","st":"In Transit"},{"m":"Panamera 4S","f":"Panamera","y":2024,"p":119000.0,"pay":"Credit Card","c":"San Francisco","s":"CA","st":"Delivered"},{"m":"911 GT3","f":"911","y":2026,"p":232500.0,"pay":"Wire Transfer","c":"Las Vegas","s":"NV","st":"Pending"},{"m":"Cayenne E-Hybrid","f":"Cayenne","y":2023,"p":96800.0,"pay":"Lease","c":"Charlotte","s":"NC","st":"Delivered"},{"m":"Macan T","f":"Macan","y":2022,"p":74400.0,"pay":"Cash","c":"Mesa","s":"AZ","st":"Awaiting Pickup"},{"m":"Taycan GTS","f":"Taycan","y":2025,"p":148500.0,"pay":"Crypto Payment","c":"Atlanta","s":"GA","st":"Delivered"},{"m":"718 Boxster","f":"718","y":2021,"p":71900.0,"pay":"Bank Transfer","c":"Long Beach","s":"CA","st":"Pending"},{"m":"911 Targa 4","f":"911","y":2024,"p":143250.0,"pay":"Financing","c":"Oakland","s":"CA","st":"In Transit"},{"m":"Panamera Turbo","f":"Panamera","y":2020,"p":137500.0,"pay":"Wire Transfer","c":"Tulsa","s":"OK","st":"Delivered"},{"m":"Cayenne Turbo GT","f":"Cayenne","y":2025,"p":204800.0,"pay":"Credit Card","c":"Wichita","s":"KS","st":"Pending"},{"m":"911 Dakar","f":"911","y":2024,"p":271700.0,"pay":"Lease","c":"New Orleans","s":"LA","st":"Delivered"}];
+const $=id=>document.getElementById(id);
+const fm=v=>v>=1e6?'US$ '+(v/1e6).toFixed(2).replace('.',',')+' mi':'US$ '+Math.round(v/1000)+' mil';
+const uniq=k=>[...new Set(D.map(r=>r[k]))].sort((a,b)=>a>b?1:-1);
+const sels={fF:['f','Todas as famílias'],fS:['s','Todos os estados'],fY:['y','Todos os anos'],fP:['pay','Todas as formas']};
+for(const id in sels){const [k,all]=sels[id];$(id).innerHTML='<option value="">'+all+'</option>'+uniq(k).map(v=>'<option>'+v+'</option>').join('');$(id).onchange=draw}
+$('fC').onchange=draw;
+$('rs').onclick=()=>{for(const id in sels)$(id).value='';$('fC').checked=false;draw()};
+function group(rows,k){const g={};rows.forEach(r=>{(g[r[k]]=g[r[k]]||{n:0,s:0}).n++;g[r[k]].s+=r.p});return Object.entries(g).map(([l,o])=>({l,n:o.n,s:o.s,t:o.s/o.n}))}
+function bars(el,items,max,val,sub){
+$(el).innerHTML=items.length?items.map(i=>'<div class="row"><span class="lb">'+i.l+'</span><span class="tr"><i style="width:'+(max?i.v/max*100:0)+'%"></i></span><span class="vl">'+val(i)+'<small>'+sub(i)+'</small></span></div>').join(''):'<p class="empty">Nenhuma venda com esses filtros. Use Limpar filtros.</p>'}
+function draw(){
+const F=$('fF').value,S=$('fS').value,Y=$('fY').value,P=$('fP').value,C=$('fC').checked;
+const R=D.filter(r=>(!F||r.f===F)&&(!S||r.s===S)&&(!Y||r.y==Y)&&(!P||r.pay===P)&&(C||r.st!=='Cancelled'));
+const tot=R.reduce((a,r)=>a+r.p,0);
+$('k1').textContent=R.length;$('k2').textContent=R.length?fm(tot):'–';$('k3').textContent=R.length?fm(tot/R.length):'–';
+const t=(items,k)=>items.sort((a,b)=>b[k]-a[k]);
+const f=t(group(R,'f'),'s').map(i=>({...i,v:i.s}));
+bars('c1',f,f[0]&&f[0].v,i=>fm(i.s),i=>i.n+' vendas · ticket '+fm(i.t));
+$('r1').textContent=f.length?f[0].l+' lidera com '+Math.round(f[0].s/tot*100)+'% da receita'+(f.length>1?'. Compare com o número de vendas: '+t([...f],'n')[0].l+' vende mais unidades.':'.'):'';
+const s=t(group(R,'s'),'s').slice(0,8).map(i=>({...i,v:i.s}));
+bars('c2',s,s[0]&&s[0].v,i=>fm(i.s),i=>i.n+' vendas');
+$('r2').textContent=s.length>1?s[0].l+' e '+s[1].l+' juntos somam '+Math.round((s[0].s+s[1].s)/tot*100)+'% da receita (top 8 estados no gráfico).':(s.length?s[0].l+' concentra toda a receita deste recorte.':'');
+const p=t(group(R,'pay'),'n').map(i=>({...i,v:i.n}));
+bars('c3',p,p[0]&&p[0].v,i=>i.n+' vendas',i=>'ticket '+fm(i.t));
+const hi=p.filter(i=>i.n>=2).sort((a,b)=>b.t-a.t)[0];
+$('r3').textContent=p.length?p[0].l+' responde por '+Math.round(p[0].n/R.length*100)+'% das vendas.'+(hi?' O maior ticket, entre formas com 2 ou mais vendas, é de '+hi.l+' ('+fm(hi.t)+').':''):'';
+}
+draw();
+</script>
+</body>
+</html>
